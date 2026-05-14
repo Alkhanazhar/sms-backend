@@ -36,7 +36,6 @@ const limiter = rateLimit({
 
 
 app.use(limiter);
-
 app.use(helmet()); // Security middleware to set various HTTP headers for app security
 app.use(express.json()); // Middleware to parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-encoded bodies
