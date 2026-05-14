@@ -5,6 +5,7 @@ import express, {
     type Response,
 } from "express";
 import helmet from "helmet";
+import cron from "node-cron";
 import morgan from "morgan";
 import cors from "cors";
 import { serve } from "inngest/express";
@@ -24,6 +25,7 @@ import dashboardRouter from "./routes/dashboard.routes.ts";
 import { inngest } from "./innegest/index.ts";
 import { generateExam, generateTimeTable, handleExamSubmission } from "./innegest/functions.ts";
 import rateLimit from "express-rate-limit";
+import axios from "axios";
 const limiter = rateLimit({
 
     windowMs: 15 * 60 * 1000,
@@ -65,7 +67,45 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 
+app.get("/awake", (req: Request, res: Response) => {
 
+    res.status(200).json({
+        success: true,
+        message: "Server Awake",
+        timestamp: new Date(),
+    });
+
+});
+
+cron.schedule("*/4 * * * *", async () => {
+
+    try {
+
+        const url = process.env.SERVER_URL;
+
+        if (!url) {
+            console.log("SERVER_URL missing");
+            return;
+        }
+
+        const response = await axios.get(
+            `${url}/awake`
+        );
+
+        console.log(
+            "Keep Alive Success:",
+            response.data
+        );
+
+    } catch (error) {
+
+        console.log(
+            "Keep Alive Failed"
+        );
+
+    }
+
+});
 
 // import user routes
 app.use("/api/users", userRoutes);
