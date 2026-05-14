@@ -45,9 +45,7 @@ app.use(cookieParser()); // Middleware to parse cookies
 
 // log http requests to console
 // NODE_ENV missing in .env
-if (process.env.STAGE === "development") {
-    app.use(morgan("dev"));
-}
+app.use(morgan(process.env.STAGE === "development" ? "dev" : "combined"));
 
 //connect to mongodb
 connectDb()
