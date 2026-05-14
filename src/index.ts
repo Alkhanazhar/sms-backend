@@ -1,5 +1,6 @@
 import cookieParser from "cookie-parser";
 import express, {
+    NextFunction,
     type Application,
     type Request,
     type Response,
@@ -12,6 +13,7 @@ import { serve } from "inngest/express";
 import "dotenv/config"
 import connectDb from "./config/connect-db.js";
 const app: Application = express();
+app.set("trust proxy", 1);
 const PORT = process.env.PORT || 5000;
 import userRoutes from "./routes/user.routes.js";
 import academicYearRouter from "./routes/academic.routes.js";
@@ -45,12 +47,10 @@ app.use(cookieParser()); // Middleware to parse cookies
 
 // log http requests to console
 // NODE_ENV missing in .env
-app.use(morgan(process.env.STAGE === "development" ? "dev" : "combined"));
-
-//connect to mongodb
+app.use(morgan("dev"));
+// connect to mongodb
 connectDb()
 
-// cross-origin resource sharing (CORS) middleware
 // credentials: true allows cookies to be sent with requests
 app.use(
     cors({
@@ -91,7 +91,7 @@ cron.schedule("*/4 * * * *", async () => {
         );
 
         console.log(
-            "Keep Alive Success:",
+            "Keep Alive Success:here",
             response.data
         );
 
@@ -123,7 +123,7 @@ app.use(
     })
 );
 
-app.use((err: Error, req: Request, res: Response) => {
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
     res.status(500).json({ status: "error", message: err.message });
 })
