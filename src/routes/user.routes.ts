@@ -10,8 +10,8 @@ import {
   logoutUser,
   getUserProfile,
   getUsers,
-} from "../controllers/user.controller.ts";
-import { protect, authorize } from "../middleware/protect.ts";
+} from "../controllers/user.controller.js";
+import { protect, authorize } from "../middleware/protect.js";
 
 // make sure to protect to get access to the user token
 userRoutes.post(

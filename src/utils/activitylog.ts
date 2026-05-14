@@ -1,4 +1,4 @@
-import ActivitiesLog from "../models/activity.model.ts";
+import ActivitiesLog from "../models/activity.model.js";
 
 export const logActivity = async ({
   userId,

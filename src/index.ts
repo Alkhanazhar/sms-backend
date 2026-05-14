@@ -10,20 +10,20 @@ import morgan from "morgan";
 import cors from "cors";
 import { serve } from "inngest/express";
 import "dotenv/config"
-import connectDb from "./config/connect-db.ts";
+import connectDb from "./config/connect-db.js";
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
-import userRoutes from "./routes/user.routes.ts";
-import academicYearRouter from "./routes/academic.routes.ts";
-import classRouter from "./routes/class.routes.ts";
-import LogsRouter from "./routes/activitylog.routes.ts";
-import subjectRouter from "./routes/subject.routes.ts";
-import timeRouter from "./routes/timetable.route.ts";
-import examRouter from "./routes/exam.route.ts";
-import dashboardRouter from "./routes/dashboard.routes.ts";
+import userRoutes from "./routes/user.routes.js";
+import academicYearRouter from "./routes/academic.routes.js";
+import classRouter from "./routes/class.routes.js";
+import LogsRouter from "./routes/activitylog.routes.js";
+import subjectRouter from "./routes/subject.routes.js";
+import timeRouter from "./routes/timetable.route.js";
+import examRouter from "./routes/exam.route.js";
+import dashboardRouter from "./routes/dashboard.routes.js";
 
-import { inngest } from "./innegest/index.ts";
-import { generateExam, generateTimeTable, handleExamSubmission } from "./innegest/functions.ts";
+import { inngest } from "./innegest/index.js";
+import { generateExam, generateTimeTable, handleExamSubmission } from "./innegest/functions.js";
 import rateLimit from "express-rate-limit";
 import axios from "axios";
 const limiter = rateLimit({

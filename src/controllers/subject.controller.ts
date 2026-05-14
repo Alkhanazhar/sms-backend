@@ -1,6 +1,6 @@
 import { type Request, type Response } from "express";
-import { logActivity } from "../utils/activitylog.ts";
-import subject from "../models/subject.model.ts";
+import { logActivity } from "../utils/activitylog.js";
+import subject from "../models/subject.model.js";
 
 // @desc    Create a new Subject
 // @route   POST /api/subjects

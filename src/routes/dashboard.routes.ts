@@ -1,7 +1,7 @@
 import express from "express";
-import { getDashboardStats } from "../controllers/dashboard.controller.ts";
-// import { generateDashboardInsight } from "../controllers/aiController";
-import { protect } from "../middleware/protect.ts";
+import { getDashboardStats } from "../controllers/dashboard.controller.js";
+// import { generateDashboardInsight } from "../controllers/aiController.js";
+import { protect } from "../middleware/protect.js";
 
 const dashboardRouter = express.Router();
 

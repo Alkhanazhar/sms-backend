@@ -1,6 +1,6 @@
 import { type Request, type Response } from "express";
-import Class from "../models/class.model.ts";
-import { logActivity } from "../utils/activitylog.ts";
+import Class from "../models/class.model.js";
+import { logActivity } from "../utils/activitylog.js";
 
 // @desc    Create a new Class
 // @route   POST /api/classes

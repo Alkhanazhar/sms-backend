@@ -1,10 +1,10 @@
 import { type Request, type Response } from "express";
-import User from "../models/user.model.ts";
-import Class from "../models/class.model.ts";
-import Exam from "../models/exam.model.ts";
-import Submission from "../models/submission.model.ts";
-import ActivityLog from "../models/activity.model.ts";
-// import Timetable from "../models/timetable.model.ts";
+import User from "../models/user.model.js";
+import Class from "../models/class.model.js";
+import Exam from "../models/exam.model.js";
+import Submission from "../models/submission.model.js";
+import ActivityLog from "../models/activity.model.js";
+// import Timetable from "../models/timetable.model.ts.js";
 
 // Helper to get day name (e.g., "Monday")
 const getTodayName = () =>

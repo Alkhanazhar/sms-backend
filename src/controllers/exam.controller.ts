@@ -1,9 +1,9 @@
 import { type Request, type Response } from "express";
-import { logActivity } from "../utils/activitylog.ts";
-import { inngest } from "../innegest/index.ts";
-import Exam from "../models/exam.model.ts";
-import Subject from "../models/subject.model.ts";
-import Submission from "../models/submission.model.ts";
+import { logActivity } from "../utils/activitylog.js";
+import { inngest } from "../innegest/index.js";
+import Exam from "../models/exam.model.js";
+import Subject from "../models/subject.model.js";
+import Submission from "../models/submission.model.js";
 
 // @desc    Trigger AI Exam Generation
 // @route   POST /api/exams/generate

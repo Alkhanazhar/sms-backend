@@ -6,8 +6,8 @@ import {
     getExamById,
     toggleExamStatus,
     getExamResult,
-} from "../controllers/exam.controller.ts";
-import { protect, authorize } from "../middleware/protect.ts";
+} from "../controllers/exam.controller.js";
+import { protect, authorize } from "../middleware/protect.js";
 
 const examRouter = express.Router();
 

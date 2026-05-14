@@ -1,5 +1,5 @@
 import { type Request, type Response } from "express";
-import ActivityLog from "../models/activity.model.ts";
+import ActivityLog from "../models/activity.model.js";
 
 // @desc    Get System Activity Logs(including pagination)
 // @route   GET /api/activity

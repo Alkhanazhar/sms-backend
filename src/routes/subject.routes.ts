@@ -1,11 +1,11 @@
 import express from "express";
-import { authorize, protect } from "../middleware/protect.ts";
+import { authorize, protect } from "../middleware/protect.js";
 import {
   createSubject,
   getAllSubjects,
   updateSubject,
   deleteSubject,
-} from "../controllers/subject.controller.ts";
+} from "../controllers/subject.controller.js";
 
 const subjectRouter = express.Router();
 

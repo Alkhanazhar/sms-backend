@@ -1,6 +1,6 @@
 import express from "express";
-import { generateTimetable, getTimetable } from "../controllers/timetable.controller.ts";
-import { authorize, protect } from "../middleware/protect.ts";
+import { generateTimetable, getTimetable } from "../controllers/timetable.controller.js";
+import { authorize, protect } from "../middleware/protect.js";
 
 const timeRouter = express.Router();
 

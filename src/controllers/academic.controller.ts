@@ -1,6 +1,6 @@
 import { type Request, type Response } from "express";
-import { logActivity } from "../utils/activitylog.ts";
-import AcademicYear from "../models/academic.model.ts";
+import { logActivity } from "../utils/activitylog.js";
+import AcademicYear from "../models/academic.model.js";
 
 // @desc    Create a new Academic Year
 // @route   POST /api/academic-years

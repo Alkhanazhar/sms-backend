@@ -1,8 +1,8 @@
 import { type Request, type Response } from "express";
-import User from "../models/user.model.ts";
-import { generateToken } from "../utils/generateToken.ts";
-import { logActivity } from "../utils/activitylog.ts";
-import type { AuthRequest } from "../middleware/protect.ts";
+import User from "../models/user.model.js";
+import { generateToken } from "../utils/generateToken.js";
+import { logActivity } from "../utils/activitylog.js";
+import type { AuthRequest } from "../middleware/protect.js";
 
 // @desc    Register a new user
 // @route   POST /api/users/register

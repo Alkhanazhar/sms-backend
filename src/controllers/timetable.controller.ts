@@ -1,7 +1,7 @@
 import { type Request, type Response } from "express";
-import { logActivity } from "../utils/activitylog.ts";
-import Timetable from "../models/timetable.model.ts";
-import { inngest } from "../innegest/index.ts";
+import { logActivity } from "../utils/activitylog.js";
+import Timetable from "../models/timetable.model.js";
+import { inngest } from "../innegest/index.js";
 
 // @desc    Generate a Timetable using AI
 // @route   POST /api/timetables/generate

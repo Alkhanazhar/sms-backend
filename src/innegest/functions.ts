@@ -1,17 +1,17 @@
-import type _class from "../models/class.model.ts";
-import { inngest } from "./index.ts";
-import Class from "../models/class.model.ts";
-import User from "../models/user.model.ts";
-// import Timetable from "../models/timetable.ts";
-// import Exam from "../models/exam.ts";
-// import Submission from "../models/submission.ts";
+import type _class from "../models/class.model.js";
+import { inngest } from "./index.js";
+import Class from "../models/class.model.js";
+import User from "../models/user.model.js";
+// import Timetable from "../models/timetable.ts.js";
+// import Exam from "../models/exam.ts.js";
+// import Submission from "../models/submission.ts.js";
 
 import { NonRetriableError } from "inngest";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText } from "ai";
-import timetableModel from "../models/timetable.model.ts";
-import examModel from "../models/exam.model.ts";
-import submissionModel from "../models/submission.model.ts";
+import timetableModel from "../models/timetable.model.js";
+import examModel from "../models/exam.model.js";
+import submissionModel from "../models/submission.model.js";
 
 interface GenSettings {
   startTime: string;

@@ -4,8 +4,8 @@ import {
   updateClass,
   deleteClass,
   getAllClasses,
-} from "../controllers/class.controllers.ts";
-import { authorize, protect } from "../middleware/protect.ts";
+} from "../controllers/class.controllers.js";
+import { authorize, protect } from "../middleware/protect.js";
 
 const classRouter = express.Router();
 

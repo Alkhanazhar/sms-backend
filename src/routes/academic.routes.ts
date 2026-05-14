@@ -5,8 +5,8 @@ import {
     updateAcademicYear,
     deleteAcademicYear,
     getAllAcademicYears,
-} from "../controllers/academic.controller.ts";
-import { authorize, protect } from "../middleware/protect.ts";
+} from "../controllers/academic.controller.js";
+import { authorize, protect } from "../middleware/protect.js";
 
 
 const academicYearRouter = express.Router();
