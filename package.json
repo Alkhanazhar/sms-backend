@@ -16,10 +16,11 @@
     "nodemon": "^3.1.11",
     "ts-node": "^10.9.2"
   },
-  "scripts": {
-    "start": "bun --watch index.ts",
-    "dev": "nodemon --exec bun run index.ts"
-  },
+ "scripts": {
+  "dev": "bun --watch src/index.ts",
+  "build": "tsc",
+  "start": "node dist/index.js"
+},
   "peerDependencies": {
     "typescript": "^5"
   },
