@@ -9,7 +9,7 @@ import redisClient from "../config/redis.js";
 export const createClass = async (req: Request, res: Response) => {
   try {
     const { name, academicYear, classTeacher, capacity } = req.body;
-   
+
     const existingClass = await Class.findOne({ name, academicYear });
     console.log(existingClass);
     if (existingClass) {
@@ -81,7 +81,7 @@ export const getAllClasses = async (req: Request, res: Response) => {
       },
     };
 
-    await redisClient.setEx(cacheKey, 60 * 2, JSON.stringify(responseData));
+    await redisClient.setEx(cacheKey, 60 * 5, JSON.stringify(responseData));
     res.status(200).json(responseData);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });

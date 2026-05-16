@@ -103,7 +103,7 @@ export const getExams = async (req: Request, res: Response) => {
       .populate("subject", "name")
       .populate("class", "name section")
       .select("-questions.correctAnswer"); // Hide answers!
-    await redisClient.setEx(cacheKey, 60 * 2, JSON.stringify(exams));
+    await redisClient.setEx(cacheKey, 60 * 5, JSON.stringify(exams));
 
     res.json(exams);
   } catch (error: any) {
@@ -160,7 +160,7 @@ export const getExamById = async (req: Request, res: Response) => {
           .json({ message: "You are not authorized to view this exam." });
       }
     }
-    await redisClient.setEx(cacheKey, 60 * 2, JSON.stringify(exam));
+    await redisClient.setEx(cacheKey, 60 * 5, JSON.stringify(exam));
 
     res.json(exam);
   } catch (error: any) {

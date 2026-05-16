@@ -84,7 +84,7 @@ export const getNotices = async (req: Request, res: Response): Promise<void> => 
       isRead: notice.readBy?.some((id: any) => id.toString() === userId.toString()) || false,
       readBy: undefined // Hide the full array from frontend for privacy/size
     }));
-    await redisClient.setEx(cacheKey, 60 * 2, JSON.stringify(noticesWithReadStatus));
+    await redisClient.setEx(cacheKey, 60 * 5, JSON.stringify(noticesWithReadStatus));
     res.status(200).json(noticesWithReadStatus);
     return;
   } catch (error) {

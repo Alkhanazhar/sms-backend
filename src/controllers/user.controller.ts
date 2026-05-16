@@ -155,6 +155,7 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
             filter.role = role;
         }
 
+        console.log(filter)
         if (search) {
             filter.$or = [
                 { name: { $regex: search, $options: "i" } },
@@ -180,7 +181,7 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
         ]);
 
 
-        await redisClient.setEx(cacheKey, 60 * 2, JSON.stringify({
+        await redisClient.setEx(cacheKey, 60 * 5, JSON.stringify({
             users,
             pagination: {
                 total,

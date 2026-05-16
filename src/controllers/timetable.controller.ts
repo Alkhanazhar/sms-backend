@@ -48,7 +48,7 @@ export const getTimetable = async (req: Request, res: Response) => {
       res.status(404).json({ message: "Timetable not found" });
       return;
     }
-    await redisClient.setEx(cacheKey, 60 * 2, JSON.stringify(timetable));
+    await redisClient.setEx(cacheKey, 60 * 5, JSON.stringify(timetable));
     res.status(200).json(timetable);
     return;
   } catch (error: any) {
