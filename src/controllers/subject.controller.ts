@@ -1,6 +1,7 @@
 import { type Request, type Response } from "express";
 import { logActivity } from "../utils/activitylog.js";
 import subject from "../models/subject.model.js";
+import redisClient from "../config/redis.js";
 
 // @desc    Create a new Subject
 // @route   POST /api/subjects
@@ -49,6 +50,11 @@ export const getAllSubjects = async (req: Request, res: Response) => {
         { code: { $regex: search, $options: "i" } },
       ];
     }
+    const cacheKey = Object.keys(query).length > 0 ? `subjects:${JSON.stringify(query)}` : `subjects`;
+    const cachedSubjects = await redisClient.get(cacheKey);
+    if (cachedSubjects) {
+      return res.json(JSON.parse(cachedSubjects));
+    }
     // 3. Execute Query (Count & Find)
     const [total, subjects] = await Promise.all([
       subject.countDocuments(query),
@@ -60,6 +66,16 @@ export const getAllSubjects = async (req: Request, res: Response) => {
         .limit(limit),
     ]);
     // 4. Return Data + Pagination Meta
+
+    await redisClient.setEx(cacheKey, 60 * 60 * 24 * 7, JSON.stringify({
+      subjects,
+      pagination: {
+        total,
+        page,
+        pages: Math.ceil(total / limit),
+      },
+    }));
+
     res.json({
       subjects,
       pagination: {

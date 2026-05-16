@@ -1,5 +1,6 @@
 import { type Request, type Response } from "express";
 import Notice from "../models/notice.model.js";
+import redisClient from "../config/redis.js";
 
 // @desc    Create a new Notice
 // @route   POST /api/notices
@@ -7,7 +8,7 @@ import Notice from "../models/notice.model.js";
 export const createNotice = async (req: Request, res: Response): Promise<void> => {
   try {
     const { title, content, targetType, targetUsers } = req.body;
-    
+
     // Parse targetUsers if it comes as a string (FormData limitation)
     let parsedTargetUsers = [];
     if (targetUsers) {
@@ -52,7 +53,7 @@ export const getNotices = async (req: Request, res: Response): Promise<void> => 
 
     if (userRole === "admin") {
       // Admin sees everything
-      query = {}; 
+      query = {};
     } else if (userRole === "teacher") {
       query.$or = [
         { targetType: "ALL" },
@@ -66,7 +67,12 @@ export const getNotices = async (req: Request, res: Response): Promise<void> => 
         { targetType: "SPECIFIC_USERS", targetUsers: userId }
       ];
     }
-
+    const cacheKey = `notices:${userId}`;
+    const cachedNotices = await redisClient.get(cacheKey);
+    if (cachedNotices) {
+      res.status(200).json(JSON.parse(cachedNotices));
+      return;
+    }
     const notices = await Notice.find(query)
       .populate("sender", "name email role")
       .sort({ createdAt: -1 })
@@ -78,8 +84,9 @@ export const getNotices = async (req: Request, res: Response): Promise<void> => 
       isRead: notice.readBy?.some((id: any) => id.toString() === userId.toString()) || false,
       readBy: undefined // Hide the full array from frontend for privacy/size
     }));
-
+    await redisClient.setEx(cacheKey, 60 * 60 * 24 * 7, JSON.stringify(noticesWithReadStatus));
     res.status(200).json(noticesWithReadStatus);
+    return;
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });
   }
@@ -112,7 +119,7 @@ export const markNoticeAsRead = async (req: Request, res: Response): Promise<voi
     const userId = (req as any).user?._id;
 
     const notice = await Notice.findById(noticeId);
-    
+
     if (!notice) {
       res.status(404).json({ message: "Notice not found" });
       return;

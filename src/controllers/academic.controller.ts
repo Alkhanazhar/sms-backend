@@ -97,13 +97,19 @@ export const getCurrentAcademicYear = async (
   res: Response
 ): Promise<void> => {
   try {
+    const cacheKey = "currentAcademicYear";
+    const cachedCurrentYear = await redisClient.get(cacheKey);
+    if (cachedCurrentYear) {
+      res.status(200).json(JSON.parse(cachedCurrentYear));
+      return;
+    }
     const currentYear = await AcademicYear.findOne({ isCurrent: true });
     if (!currentYear) {
       res.status(404).json({ message: "No current academic year found" });
       return;
-    } else {
-      res.status(200).json(currentYear);
     }
+    await redisClient.setEx(cacheKey, 60 * 60 * 24 * 7, JSON.stringify(currentYear));
+    res.status(200).json(currentYear);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });
   }

@@ -3,6 +3,7 @@ import User from "../models/user.model.js";
 import { generateToken } from "../utils/generateToken.js";
 import { logActivity } from "../utils/activitylog.js";
 import type { AuthRequest } from "../middleware/protect.js";
+import redisClient from "../config/redis.js";
 
 // @desc    Register a new user
 // @route   POST /api/users/register
@@ -12,7 +13,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         const {
             name,
             email,
-            password, 
+            password,
             role,
             studentClass,
             teacherSubject,
@@ -160,6 +161,12 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
                 { email: { $regex: search, $options: "i" } },
             ];
         }
+        const cacheKey = `users:${JSON.stringify(filter)}:page=${page}:limit=${limit}`;
+        const cachedUsers = await redisClient.get(cacheKey);
+        if (cachedUsers) {
+            res.json(JSON.parse(cachedUsers));
+            return
+        }
         // 3. Fetch Users with Pagination & Filtering
         const [total, users] = await Promise.all([
             User.countDocuments(filter), // Get total count for pagination logic
@@ -171,6 +178,17 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
                 .skip(skip)
                 .limit(limit),
         ]);
+
+
+        await redisClient.setEx(cacheKey, 60 * 60 * 24 * 7, JSON.stringify({
+            users,
+            pagination: {
+                total,
+                page,
+                pages: Math.ceil(total / limit),
+                limit,
+            },
+        }));
 
         // 4. Send Response
         res.json({
