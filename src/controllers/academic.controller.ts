@@ -1,6 +1,7 @@
 import { type Request, type Response } from "express";
 import { logActivity } from "../utils/activitylog.js";
 import AcademicYear from "../models/academic.model.js";
+import redisClient from "../config/redis.js";
 
 // @desc    Create a new Academic Year
 // @route   POST /api/academic-years
@@ -59,6 +60,11 @@ export const getAllAcademicYears = async (
     if (search) {
       query.name = { $regex: search, $options: "i" };
     }
+    const cache = await redisClient.get(`academicYears?page=${page}&limit=${limit}&search=${search}`);
+    if (cache) {
+      res.status(200).json(JSON.parse(cache));
+      return;
+    }
     const [total, years] = await Promise.all([
       AcademicYear.countDocuments(query),
       AcademicYear.find(query)
@@ -67,14 +73,17 @@ export const getAllAcademicYears = async (
         .limit(limit),
     ]);
 
-    res.json({
+    const responseData = {
       years,
       pagination: {
         total,
         page,
         pages: Math.ceil(total / limit),
       },
-    });
+    };
+
+    await redisClient.setex(`academicYears?page=${page}&limit=${limit}&search=${search}`, 60 * 60 * 24 * 7, JSON.stringify(responseData));
+    res.status(200).json(responseData);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });
   }

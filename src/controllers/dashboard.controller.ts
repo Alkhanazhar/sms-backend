@@ -4,6 +4,7 @@ import Class from "../models/class.model.js";
 import Exam from "../models/exam.model.js";
 import Submission from "../models/submission.model.js";
 import ActivityLog from "../models/activity.model.js";
+import redisClient from "../config/redis.js";
 // import Timetable from "../models/timetable.model.ts.js";
 
 // Helper to get day name (e.g., "Monday")
@@ -18,6 +19,11 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     let stats = {};
     // Get last 5 activities system-wide (Admin) or personal (Others)
     const activityQuery = user.role === "admin" ? {} : { user: user._id };
+    const cache = await redisClient.get(`dashboardStats?user=${user._id}`);
+    if (cache) {
+      res.status(200).json(JSON.parse(cache));
+      return;
+    }
     const recentActivities = await ActivityLog.find(activityQuery)
       .sort({ createdAt: -1 })
       .limit(5)
@@ -101,6 +107,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         recentActivity: formattedActivity,
       };
     }
+    redisClient.setex(`dashboardStats?user=${user._id}`, 60 * 60 * 24 * 7, JSON.stringify(stats));
     res.json(stats);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });

@@ -4,6 +4,7 @@ import { inngest } from "../innegest/index.js";
 import Exam from "../models/exam.model.js";
 import Subject from "../models/subject.model.js";
 import Submission from "../models/submission.model.js";
+import redisClient from "../config/redis.js";
 
 // @desc    Trigger AI Exam Generation
 // @route   POST /api/exams/generate
@@ -90,7 +91,7 @@ export const getExams = async (req: Request, res: Response) => {
       // Teachers see exams they created
       query = { teacher: user._id };
     }
-
+redisClient
     const exams = await Exam.find(query)
       .populate("subject", "name")
       .populate("class", "name section")

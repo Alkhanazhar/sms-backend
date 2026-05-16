@@ -23,11 +23,18 @@ import subjectRouter from "./routes/subject.routes.js";
 import timeRouter from "./routes/timetable.route.js";
 import examRouter from "./routes/exam.route.js";
 import dashboardRouter from "./routes/dashboard.routes.js";
+import noticeRouter from "./routes/notice.routes.js";
 
 import { inngest } from "./innegest/index.js";
 import { generateExam, generateTimeTable, handleExamSubmission } from "./innegest/functions.js";
 import rateLimit from "express-rate-limit";
 import axios from "axios";
+import redisClient from "./config/redis.js";
+import mongoose from "mongoose";
+
+
+redisClient.on('error', err => console.log('Redis Client Error', err));
+
 const limiter = rateLimit({
 
     windowMs: 15 * 60 * 1000,
@@ -45,10 +52,16 @@ app.use(express.json()); // Middleware to parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-encoded bodies
 app.use(cookieParser()); // Middleware to parse cookies
 
+// Serve static uploads folder (For Notices/Attachments)
+app.use("/uploads", express.static("public/uploads"));
+
 // log http requests to console
 // NODE_ENV missing in .env
 app.use(morgan("dev"));
 // connect to mongodb
+redisClient.connect().then(() => {
+    console.log("Redis Connected");
+});
 connectDb()
 
 // credentials: true allows cookies to be sent with requests
@@ -114,6 +127,7 @@ app.use("/api/subjects", subjectRouter);
 app.use("/api/timetables", timeRouter);
 app.use("/api/exams", examRouter);
 app.use("/api/dashboard", dashboardRouter);
+app.use("/api/notices", noticeRouter);
 app.use(
     "/api/inngest",
     serve({
@@ -130,4 +144,10 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
+});
+process.on('SIGINT', async () => {
+    console.log('Shutting down gracefully...');
+    await redisClient.quit();
+    await mongoose.connection.close();
+    process.exit(0);
 });

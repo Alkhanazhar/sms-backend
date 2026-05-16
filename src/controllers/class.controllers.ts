@@ -1,6 +1,7 @@
 import { type Request, type Response } from "express";
 import Class from "../models/class.model.js";
 import { logActivity } from "../utils/activitylog.js";
+import redisClient from "../config/redis.js";
 
 // @desc    Create a new Class
 // @route   POST /api/classes
@@ -8,8 +9,9 @@ import { logActivity } from "../utils/activitylog.js";
 export const createClass = async (req: Request, res: Response) => {
   try {
     const { name, academicYear, classTeacher, capacity } = req.body;
-
+   
     const existingClass = await Class.findOne({ name, academicYear });
+    console.log(existingClass);
     if (existingClass) {
       return res.status(400).json({
         message:
@@ -49,7 +51,16 @@ export const getAllClasses = async (req: Request, res: Response) => {
       query.name = { $regex: search, $options: "i" };
     }
 
-    // 3. Execute Query (Count & Find)
+    const cacheKey = `classes?page=${page}&limit=${limit}&search=${search}`;
+
+    // 3. Check Redis Cache
+    const cache = await redisClient.get(cacheKey);
+    if (cache) {
+      res.status(200).json(JSON.parse(cache));
+      return;
+    }
+
+    // 4. Execute Query (Count & Find)
     const [total, classes] = await Promise.all([
       Class.countDocuments(query),
       Class.find(query)
@@ -61,14 +72,17 @@ export const getAllClasses = async (req: Request, res: Response) => {
     ]);
 
     // 4. Return Data + Pagination Meta
-    res.json({
+    const responseData = {
       classes,
       pagination: {
         total,
         page,
         pages: Math.ceil(total / limit),
       },
-    });
+    };
+
+    await redisClient.setex(cacheKey, 60 * 60 * 24 * 7, JSON.stringify(responseData));
+    res.status(200).json(responseData);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });
   }
