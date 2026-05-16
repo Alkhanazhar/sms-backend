@@ -155,30 +155,32 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
             filter.role = role;
         }
 
-        console.log(filter)
         if (search) {
             filter.$or = [
                 { name: { $regex: search, $options: "i" } },
                 { email: { $regex: search, $options: "i" } },
             ];
         }
+        await redisClient.flushAll();
         const cacheKey = `users:${JSON.stringify(filter)}:page=${page}:limit=${limit}`;
         const cachedUsers = await redisClient.get(cacheKey);
         if (cachedUsers) {
             res.json(JSON.parse(cachedUsers));
             return
         }
+        console.log(filter)
         // 3. Fetch Users with Pagination & Filtering
         const [total, users] = await Promise.all([
             User.countDocuments(filter), // Get total count for pagination logic
             User.find(filter)
                 .select("-password")
-                // .populate("studentClass", "_id name section") // Added section for context
-                // .populate("teacherSubjects", "_id name code")
+                .populate("studentClass", "_id name section") // Added section for context
+                .populate("teacherSubject", "_id name section code")
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(limit),
         ]);
+        console.log(users, "users")
 
 
         await redisClient.setEx(cacheKey, 60 * 5, JSON.stringify({
