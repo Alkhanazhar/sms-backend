@@ -82,7 +82,7 @@ export const getAllAcademicYears = async (
       },
     };
 
-    await redisClient.setEx(`academicYears?page=${page}&limit=${limit}&search=${search}`, 60 * 60 * 24 * 7, JSON.stringify(responseData));
+    await redisClient.setEx(`academicYears?page=${page}&limit=${limit}&search=${search}`, 60 * 2, JSON.stringify(responseData));
     res.status(200).json(responseData);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });
@@ -108,7 +108,7 @@ export const getCurrentAcademicYear = async (
       res.status(404).json({ message: "No current academic year found" });
       return;
     }
-    await redisClient.setEx(cacheKey, 60 * 60 * 24 * 7, JSON.stringify(currentYear));
+    await redisClient.setEx(cacheKey, 60 * 2, JSON.stringify(currentYear));
     res.status(200).json(currentYear);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });

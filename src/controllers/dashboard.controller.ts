@@ -107,7 +107,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         recentActivity: formattedActivity,
       };
     }
-    redisClient.setEx(`dashboardStats?user=${user._id}`, 60 * 60 * 24 * 7, JSON.stringify(stats));
+    redisClient.setEx(`dashboardStats?user=${user._id}`, 60 * 2, JSON.stringify(stats));
     res.json(stats);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });

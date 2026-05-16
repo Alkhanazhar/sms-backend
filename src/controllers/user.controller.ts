@@ -180,7 +180,7 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
         ]);
 
 
-        await redisClient.setEx(cacheKey, 60 * 60 * 24 * 7, JSON.stringify({
+        await redisClient.setEx(cacheKey, 60 * 2, JSON.stringify({
             users,
             pagination: {
                 total,

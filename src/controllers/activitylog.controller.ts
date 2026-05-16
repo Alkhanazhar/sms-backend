@@ -34,7 +34,7 @@ export const getAllActivities = async (
       total: count,
     };
 
-    await redisClient.setEx(`activityLogs?page=${page}&limit=${limit}`, 60 * 60 * 24 * 7, JSON.stringify(responseData));
+    await redisClient.setEx(`activityLogs?page=${page}&limit=${limit}`, 60 * 2, JSON.stringify(responseData));
     res.status(200).json(responseData);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });

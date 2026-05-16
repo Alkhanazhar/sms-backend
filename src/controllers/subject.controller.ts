@@ -67,7 +67,7 @@ export const getAllSubjects = async (req: Request, res: Response) => {
     ]);
     // 4. Return Data + Pagination Meta
 
-    await redisClient.setEx(cacheKey, 60 * 60 * 24 * 7, JSON.stringify({
+    await redisClient.setEx(cacheKey, 60 * 2, JSON.stringify({
       subjects,
       pagination: {
         total,
