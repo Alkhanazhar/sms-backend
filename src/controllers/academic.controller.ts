@@ -82,7 +82,7 @@ export const getAllAcademicYears = async (
       },
     };
 
-    await redisClient.setex(`academicYears?page=${page}&limit=${limit}&search=${search}`, 60 * 60 * 24 * 7, JSON.stringify(responseData));
+    await redisClient.setEx(`academicYears?page=${page}&limit=${limit}&search=${search}`, 60 * 60 * 24 * 7, JSON.stringify(responseData));
     res.status(200).json(responseData);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });
