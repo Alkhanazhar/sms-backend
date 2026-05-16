@@ -91,11 +91,19 @@ export const getExams = async (req: Request, res: Response) => {
       // Teachers see exams they created
       query = { teacher: user._id };
     }
-redisClient
+    const cacheKey =
+      Object.keys(query).length > 0
+        ? `exams:${JSON.stringify(query)}`
+        : "exams";
+    const cachedExams = await redisClient.get(cacheKey);
+    if (cachedExams) {
+      return res.json(JSON.parse(cachedExams));
+    }
     const exams = await Exam.find(query)
       .populate("subject", "name")
       .populate("class", "name section")
       .select("-questions.correctAnswer"); // Hide answers!
+    await redisClient.setEx(cacheKey, 60 * 60 * 24 * 7, JSON.stringify(exams));
 
     res.json(exams);
   } catch (error: any) {
@@ -109,7 +117,11 @@ export const getExamById = async (req: Request, res: Response) => {
   try {
     const examId = req.params.id;
     const user = (req as any).user; // Assumes authMiddleware attaches user
-
+    const cacheKey = `exam:${examId}`;
+    const cachedExam = await redisClient.get(cacheKey);
+    if (cachedExam) {
+      return res.json(JSON.parse(cachedExam));
+    }
     // 1. Initialize the query
     let query = Exam.findById(examId)
       .populate("subject", "name code")
@@ -122,6 +134,7 @@ export const getExamById = async (req: Request, res: Response) => {
       // @ts-ignore
       query = query.select("+questions.correctAnswer");
     }
+
 
     // 3. Execute Query
     const exam = await query;
@@ -147,6 +160,7 @@ export const getExamById = async (req: Request, res: Response) => {
           .json({ message: "You are not authorized to view this exam." });
       }
     }
+    await redisClient.setEx(cacheKey, 60 * 60 * 24 * 7, JSON.stringify(exam));
 
     res.json(exam);
   } catch (error: any) {
