@@ -38,9 +38,31 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
   }
 };
 
-// Multer Upload Instance
+// Multer Upload Instance (Notices)
 export const uploadNoticeAttachment = multer({
   storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: fileFilter,
+});
+
+// --- Discipline Uploads ---
+const disciplineUploadDir = path.join(process.cwd(), "public/uploads/discipline");
+if (!fs.existsSync(disciplineUploadDir)) {
+  fs.mkdirSync(disciplineUploadDir, { recursive: true });
+}
+
+const disciplineStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, disciplineUploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, "discipline-" + uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+export const uploadDisciplineAttachment = multer({
+  storage: disciplineStorage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: fileFilter,
 });

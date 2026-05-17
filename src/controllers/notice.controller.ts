@@ -104,6 +104,7 @@ export const deleteNotice = async (req: Request, res: Response): Promise<void> =
     }
 
     await Notice.findByIdAndDelete(req.params.id);
+    await redisClient.del(`notices:${req.params.id}`);
     res.status(200).json({ message: "Notice deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });
@@ -130,6 +131,8 @@ export const markNoticeAsRead = async (req: Request, res: Response): Promise<voi
       notice.readBy.push(userId);
       await notice.save();
     }
+    await redisClient.del(`notices`);
+    await redisClient.delPattern(`notices:*`);
 
     res.status(200).json({ message: "Notice marked as read", isRead: true });
   } catch (error) {

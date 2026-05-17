@@ -4,6 +4,7 @@ import { generateToken } from "../utils/generateToken.js";
 import { logActivity } from "../utils/activitylog.js";
 import type { AuthRequest } from "../middleware/protect.js";
 import redisClient from "../config/redis.js";
+import subjectModel from "../models/subject.model.js";
 
 // @desc    Register a new user
 // @route   POST /api/users/register
@@ -38,7 +39,16 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             teacherSubject,
             isActive,
         });
-
+        if (teacherSubject && Array.isArray(teacherSubject)) {
+            await Promise.all(
+                teacherSubject.map(async (sub: string) => {
+                    await subjectModel.findByIdAndUpdate(sub, {
+                        $addToSet: { teacher: newUser._id }
+                    })
+                })
+            );
+            // await redisClient.del(`subjects:${JSON.stringify({ teacher: newUser._id })}:page=${page}:limit=${limit}`);
+        }
         if (newUser) {
             // we don't have req.user type defined, so we use a type assertion
             if ((req as any).user) {
@@ -161,7 +171,6 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
                 { email: { $regex: search, $options: "i" } },
             ];
         }
-        await redisClient.flushAll();
         const cacheKey = `users:${JSON.stringify(filter)}:page=${page}:limit=${limit}`;
         const cachedUsers = await redisClient.get(cacheKey);
         if (cachedUsers) {

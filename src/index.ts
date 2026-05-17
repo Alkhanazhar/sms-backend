@@ -24,6 +24,7 @@ import timeRouter from "./routes/timetable.route.js";
 import examRouter from "./routes/exam.route.js";
 import dashboardRouter from "./routes/dashboard.routes.js";
 import noticeRouter from "./routes/notice.routes.js";
+import disciplineRouter from "./routes/discipline.routes.js";
 
 import { inngest } from "./innegest/index.js";
 import { generateExam, generateTimeTable, handleExamSubmission } from "./innegest/functions.js";
@@ -128,6 +129,7 @@ app.use("/api/timetables", timeRouter);
 app.use("/api/exams", examRouter);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/notices", noticeRouter);
+app.use("/api/discipline", disciplineRouter);
 app.use(
     "/api/inngest",
     serve({
