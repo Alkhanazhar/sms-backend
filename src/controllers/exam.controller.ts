@@ -1,6 +1,6 @@
 import { type Request, type Response } from "express";
 import { logActivity } from "../utils/activitylog.js";
-import { inngest } from "../innegest/index.js";
+import { generateExam, handleExamSubmission } from "../service/ai.service.js";
 import Exam from "../models/exam.model.js";
 import Subject from "../models/subject.model.js";
 import Submission from "../models/submission.model.js";
@@ -42,18 +42,15 @@ export const triggerExamGeneration = async (req: Request, res: Response) => {
       action: `User triggered exam generation: ${draftExam._id}`,
     });
 
-    await inngest.send({
-      name: "exam/generate",
-      data: {
-        examId: draftExam._id,
-        topic,
-        subjectName: subjectDoc.name,
-        difficulty: difficulty || "Medium",
-        count: count || 10,
-      },
+    await generateExam({
+      examId: draftExam._id.toString(),
+      topic,
+      subjectName: subjectDoc.name,
+      difficulty: difficulty || "Medium",
+      count: count || 10,
     });
-    res.status(202).json({
-      message: "Exam generation started.",
+    res.status(201).json({
+      message: "Exam generated successfully.",
       examId: draftExam._id,
     });
   } catch (error) {
@@ -223,21 +220,18 @@ export const submitExam = async (req: Request, res: Response) => {
     const studentId = (req as any).user._id;
     const examId = req.params.id;
 
-    // Trigger Inngest function to handle submission
-    await inngest.send({
-      name: "exam/submit",
-      data: {
-        examId,
-        studentId,
-        answers,
-      },
+    // Call direct submission handler
+    await handleExamSubmission({
+      examId: examId as string,
+      studentId: studentId.toString(),
+      answers,
     });
 
     const userId = (req as any).user._id;
     await logActivity({ userId, action: "User submitted an exam" });
 
     res.status(201).json({
-      message: "Exam submission received and is being processed.",
+      message: "Exam submitted successfully.",
     });
   } catch (error: any) {
     res.status(500).json({ message: error.message });

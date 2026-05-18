@@ -1,7 +1,7 @@
 import { type Request, type Response } from "express";
 import { logActivity } from "../utils/activitylog.js";
 import Timetable from "../models/timetable.model.js";
-import { inngest } from "../innegest/index.js";
+import { generateTimeTable } from "../service/ai.service.js";
 import redisClient from "../config/redis.js";
 
 // @desc    Generate a Timetable using AI
@@ -11,20 +11,13 @@ export const generateTimetable = async (req: Request, res: Response) => {
   try {
     const { classId, academicYearId, settings } = req.body;
 
-    await inngest.send({
-      name: "generate/timetable",
-      data: {
-        classId,
-        academicYearId,
-        settings,
-      },
-    });
+    await generateTimeTable(classId, academicYearId, settings);
     const userId = (req as any).user._id;
     await logActivity({
       userId,
       action: `Requested timetable generation for class ID: ${classId}`,
     });
-    return res.status(200).json({ message: "Timetable generation initiated" });
+    return res.status(200).json({ message: "Timetable generated successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });
     return;

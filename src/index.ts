@@ -10,7 +10,6 @@ import helmet from "helmet";
 import cron from "node-cron";
 import morgan from "morgan";
 import cors from "cors";
-import { serve } from "inngest/express";
 import "dotenv/config"
 import connectDb from "./config/connect-db.js";
 const app: Application = express();
@@ -29,8 +28,6 @@ import disciplineRouter from "./routes/discipline.routes.js";
 import transportRouter from "./modules/transport/routes/transport.routes.js";
 import { initTransportSocket } from "./modules/transport/sockets/transport.socket.js";
 
-import { inngest } from "./innegest/index.js";
-import { generateExam, generateTimeTable, handleExamSubmission } from "./innegest/functions.js";
 import rateLimit from "express-rate-limit";
 import axios from "axios";
 import redisClient from "./config/redis.js";
@@ -49,16 +46,13 @@ const limiter = rateLimit({
 
 });
 
-
 app.use(limiter);
 app.use(helmet()); // Security middleware to set various HTTP headers for app security
 app.use(express.json()); // Middleware to parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-encoded bodies
 app.use(cookieParser()); // Middleware to parse cookies
-
 // Serve static uploads folder (For Notices/Attachments)
 app.use("/uploads", express.static("public/uploads"));
-
 // log http requests to console
 // NODE_ENV missing in .env
 app.use(morgan("dev"));
@@ -134,14 +128,7 @@ app.use("/api/dashboard", dashboardRouter);
 app.use("/api/notices", noticeRouter);
 app.use("/api/discipline", disciplineRouter);
 app.use("/api/transport", transportRouter);
-app.use(
-    "/api/inngest",
-    serve({
-        client: inngest,
-        // functions: [],
-        functions: [generateTimeTable, generateExam, handleExamSubmission],
-    })
-);
+
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
