@@ -1,14 +1,14 @@
 import { type Request, type Response } from "express";
 import Class from "../models/class.model.js";
 import { logActivity } from "../utils/activitylog.js";
-import redisClient from "../config/redis.js";
+import redisClient, { clearCache } from "../config/redis.js";
 
 // @desc    Create a new Class
 // @route   POST /api/classes
 // @access  Private/Admin
 export const createClass = async (req: Request, res: Response) => {
   try {
-    const { name, academicYear, classTeacher, capacity } = req.body;
+    const { name, academicYear, classTeacher, capacity, subjects } = req.body;
 
     const existingClass = await Class.findOne({ name, academicYear });
     console.log(existingClass);
@@ -24,12 +24,13 @@ export const createClass = async (req: Request, res: Response) => {
       academicYear,
       classTeacher,
       capacity,
+      subjects
     });
     await logActivity({
       userId: (req as any).user.id,
       action: `Created new class: ${newClass.name}`,
     });
-    await redisClient.del("classes");
+    await clearCache("classes");
     res.status(201).json(newClass);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });
@@ -95,11 +96,9 @@ export const getAllClasses = async (req: Request, res: Response) => {
 export const updateClass = async (req: Request, res: Response) => {
   try {
     const classId = req.params.id;
-    const { name, academicYear } = req.body;
+    console.log(classId);
 
-    const existingClass = await Class.findOne({
-      _id: { $ne: classId },
-    });
+    const existingClass = await Class.findOne({ _id: classId });
     if (existingClass) {
       const updatedClass = await Class.findByIdAndUpdate(classId, req.body, {
         new: true,
@@ -108,6 +107,8 @@ export const updateClass = async (req: Request, res: Response) => {
       if (!updatedClass) {
         return res.status(404).json({ message: "Class not found" });
       }
+      console.log("Updated class:", updatedClass);
+      await clearCache("classes");
       await logActivity({
         userId: (req as any).user.id,
         action: `Updated class: ${updatedClass.name}`,
@@ -115,7 +116,8 @@ export const updateClass = async (req: Request, res: Response) => {
       return res.status(200).json(updatedClass);
     }
   } catch (error) {
-    res.status(500).json({ message: "Server Error", error });
+    console.error("Class update error:", error);
+    return res.status(500).json({ message: "Server Error", error });
   }
 };
 
@@ -133,6 +135,7 @@ export const deleteClass = async (req: Request, res: Response) => {
     if (!deletedClass) {
       return res.status(404).json({ message: "Class not found" });
     }
+    await clearCache("classes");
     res.json({ message: "Class removed" });
   } catch (error: any) {
     res.status(500).json({ message: error.message });

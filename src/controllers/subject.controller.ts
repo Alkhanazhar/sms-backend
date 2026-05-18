@@ -1,7 +1,7 @@
 import { type Request, type Response } from "express";
 import { logActivity } from "../utils/activitylog.js";
 import subject from "../models/subject.model.js";
-import redisClient from "../config/redis.js";
+import redisClient, { clearCache } from "../config/redis.js";
 
 // @desc    Create a new Subject
 // @route   POST /api/subjects
@@ -25,7 +25,7 @@ export const createSubject = async (req: Request, res: Response) => {
         userId,
         action: `Created subject: ${newSubject.name}`,
       });
-      await redisClient.del("subjects");
+      await clearCache("subjects");
       return res.status(201).json(newSubject);
     }
   } catch (error) {

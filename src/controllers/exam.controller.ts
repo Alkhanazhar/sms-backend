@@ -4,7 +4,7 @@ import { generateExam, handleExamSubmission } from "../service/ai.service.js";
 import Exam from "../models/exam.model.js";
 import Subject from "../models/subject.model.js";
 import Submission from "../models/submission.model.js";
-import redisClient from "../config/redis.js";
+import redisClient, { clearCache } from "../config/redis.js";
 
 // @desc    Trigger AI Exam Generation
 // @route   POST /api/exams/generate
@@ -49,12 +49,15 @@ export const triggerExamGeneration = async (req: Request, res: Response) => {
       difficulty: difficulty || "Medium",
       count: count || 10,
     });
+    await clearCache("exams");
     res.status(201).json({
       message: "Exam generated successfully.",
       examId: draftExam._id,
     });
+    return;
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });
+    return;
   }
 };
 
@@ -68,7 +71,7 @@ export const createExam = async (req: Request, res: Response) => {
     });
     const userId = (req as any).user._id;
     await logActivity({ userId, action: "User created a new exam" });
-    await redisClient.delPattern(`exams:*`);
+    await clearCache("exams");
     res.status(201).json(exam);
     return;
   } catch (error: any) {
@@ -261,6 +264,23 @@ export const getExamResult = async (req: Request, res: Response) => {
     }
 
     res.json(submission);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteExam = async (req: Request, res: Response) => {
+  try {
+    const examId = req.params.id;
+    const exam = await Exam.findById(examId);
+    if (!exam) {
+      return res.status(404).json({ message: "Exam not found" });
+    }
+    const userId = (req as any).user._id;
+    await logActivity({ userId, action: "User deleted an exam" });
+    await Exam.findByIdAndDelete(examId);
+    await clearCache("exams");
+    res.json({ message: "Exam deleted successfully." });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

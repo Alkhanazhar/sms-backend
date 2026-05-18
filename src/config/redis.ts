@@ -11,4 +11,11 @@ redisClient.on("connect", () => {
 redisClient.on("error", (err) => {
     console.log("Redis Error:", err);
 });
+export const clearCache = async (prefix: string) => {
+  const keys = await redisClient.keys(`${prefix}*`);
+  if (keys.length > 0) {
+    await redisClient.del(keys);
+  }
+};
+
 export default redisClient;

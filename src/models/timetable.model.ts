@@ -36,6 +36,8 @@ const timetableSchema = new Schema(
             teacher: { type: Schema.Types.ObjectId, ref: "User" },
             startTime: String,
             endTime: String,
+            isRecess: { type: Boolean, default: true },
+            label: String,
           },
         ],
       },

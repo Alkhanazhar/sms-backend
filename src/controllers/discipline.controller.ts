@@ -2,7 +2,7 @@ import { type Request, type Response } from "express";
 import Discipline from "../models/discipline.model.js";
 import User from "../models/user.model.js";
 import { generateGeminiResponse } from "../config/ai-sdk.js";
-import redisClient from "../config/redis.js";
+import redisClient, { clearCache } from "../config/redis.js";
 
 // @desc    Log a new student discipline incident with AI analysis
 // @route   POST /api/discipline
@@ -94,9 +94,7 @@ JSON structure:
       escalatedToAdmin: aiParsedData.severity === "HIGH"
     });
 
-    // Clear caches
-    await redisClient.del(`discipline:student:${studentId}`);
-    await redisClient.delPattern("discipline:*");
+    await clearCache("discipline");
 
     res.status(201).json(newIncident);
   } catch (error) {
@@ -186,7 +184,8 @@ export const updateIncidentStatus = async (req: Request, res: Response): Promise
     await incident.save();
 
     // Clear caches
-    await redisClient.delPattern("discipline:*");
+    clearCache("discipline");
+
 
     res.json({ message: "Incident updated successfully", incident });
   } catch (error) {
@@ -221,8 +220,7 @@ export const addParentFeedback = async (req: Request, res: Response): Promise<vo
 
     await incident.save();
 
-    // Clear caches
-    await redisClient.delPattern("discipline:*");
+    await clearCache("discipline");
 
     res.json({ message: "Feedback added successfully", incident });
   } catch (error) {

@@ -6,6 +6,7 @@ import {
     getExamById,
     toggleExamStatus,
     getExamResult,
+    deleteExam
 } from "../controllers/exam.controller.js";
 import { protect, authorize } from "../middleware/protect.js";
 
@@ -55,6 +56,13 @@ examRouter.get(
     protect,
     getExamById,
     authorize(["teacher", "student", "admin"])
+);
+
+examRouter.delete(
+    "/:id",
+    protect,
+    authorize(["teacher", "admin"]),
+    deleteExam
 );
 
 export default examRouter;

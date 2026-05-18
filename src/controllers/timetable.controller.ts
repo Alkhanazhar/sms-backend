@@ -2,7 +2,7 @@ import { type Request, type Response } from "express";
 import { logActivity } from "../utils/activitylog.js";
 import Timetable from "../models/timetable.model.js";
 import { generateTimeTable } from "../service/ai.service.js";
-import redisClient from "../config/redis.js";
+import redisClient, { clearCache } from "../config/redis.js";
 
 // @desc    Generate a Timetable using AI
 // @route   POST /api/timetables/generate
@@ -12,13 +12,12 @@ export const generateTimetable = async (req: Request, res: Response) => {
     const { classId, academicYearId, settings } = req.body;
     console.log(classId, academicYearId, settings);
     await generateTimeTable(classId, academicYearId, settings);
-    await redisClient.delPattern(`timetable:*`);
+    await clearCache("timetable");
     const userId = (req as any).user._id;
     await logActivity({
       userId,
       action: `Requested timetable generation for class ID: ${classId}`,
     });
-    await redisClient.del("timetable");
     return res.status(200).json({ message: "Timetable generated successfully" });
   } catch (error: any) {
     res.status(500).json({ message: "Server Error", error: error.message });

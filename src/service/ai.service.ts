@@ -10,6 +10,8 @@ interface GenSettings {
   startTime: string;
   endTime: string;
   periods: number;
+  recessTime?: string;
+  recessDuration?: number;
 }
 
 /**
@@ -78,6 +80,7 @@ export const generateTimeTable = async (
     CONTEXT:
     - Class: ${contextData.className}
     - Hours: ${settings.startTime} to ${settings.endTime} (${settings.periods} periods/day).
+    - Recess Schedule: Exactly one daily recess starting exactly at ${settings.recessTime || "12:00"} for a duration of ${settings.recessDuration || 30} minutes.
 
     RESOURCES:
     - Subjects: ${JSON.stringify(contextData.subjects)}
@@ -85,17 +88,27 @@ export const generateTimeTable = async (
     - Other Timetables: ${JSON.stringify(allTimetables)}
 
     STRICT RULES:
-    1. Assign a Teacher to every Subject period.
+    1. Assign a Teacher and Subject to every standard academic period. There must be exactly ${settings.periods} standard academic periods per day in total.
     2. Teacher MUST have the subject ID in their list.
-    3. Break Time/Free Period after every 2 periods(10 minutes), Lunch Time after 5 periods(at 12:00)(30 minutes).
-    4. Avoid clashes with other classes(teacher can't be in two classes at the same time).
-    5. Output strict JSON only. Schema:
+    3. RECESS PLACEMENT RULE: You MUST insert exactly ONE recess period per day. This recess period MUST start exactly at ${settings.recessTime || "12:00"} and end exactly at ${settings.recessTime || "12:00"} plus ${settings.recessDuration || 30} minutes (e.g. if recessTime is 12:00 and duration is 30, it MUST be from 12:00 to 12:30). Set "isRecess": true, "label": "Recess", "subject": null, and "teacher": null for this period. Absolutely NO shifting of this recess period to any other hour (like 08:00 or 10:00 or the beginning/end of the day) is allowed. It must remain strictly at the requested time.
+    4. TIMING & ADJUSTMENT RULE:
+       - Every single period's starting time and ending time minutes MUST end with 0 (e.g., 08:00, 08:40, 09:20, 09:30, 10:10, 11:00, 12:00, 12:30, etc. - the minutes digit must end in 0: like :00, :10, :20, :30, :40, :50). Absolutely NO minutes ending in 5 (like :45, :15, :35, :05, :25, :55).
+       - The daily schedule MUST start exactly at ${settings.startTime} and end exactly at ${settings.endTime}. Adjust standard period durations (e.g. making some periods 50 minutes and others 60 minutes) so they perfectly fill all remaining time in the day before and after the recess period. If there is still leftover time, distribute it among standard academic periods or add a 'Free Period' at the end of the day, so there are absolutely NO gaps or overlaps in the schedule. All times must strictly end in 0 for the minute digit.
+    5. Avoid clashes with other classes (teacher can't be in two classes at the same time).
+    6. Output strict JSON only. Schema:
        {
          "schedule": [
            {
              "day": "Monday",
              "periods": [
-               { "subject": "SUBJECT_ID", "teacher": "TEACHER_ID", "startTime": "HH:MM", "endTime": "HH:MM" }
+               { 
+                 "subject": "SUBJECT_ID_OR_NULL", 
+                 "teacher": "TEACHER_ID_OR_NULL", 
+                 "startTime": "HH:MM", 
+                 "endTime": "HH:MM",
+                 "isRecess": boolean,
+                 "label": "string"
+               }
              ]
            }
          ]

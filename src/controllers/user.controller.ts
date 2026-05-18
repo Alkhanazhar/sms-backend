@@ -3,7 +3,7 @@ import User from "../models/user.model.js";
 import { generateToken } from "../utils/generateToken.js";
 import { logActivity } from "../utils/activitylog.js";
 import type { AuthRequest } from "../middleware/protect.js";
-import redisClient from "../config/redis.js";
+import redisClient, { clearCache } from "../config/redis.js";
 import subjectModel from "../models/subject.model.js";
 
 // @desc    Register a new user
@@ -58,7 +58,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                     details: `Registered user with email: ${newUser.email}`,
                 });
             }
-            await redisClient.del("users");
+            await clearCache("users");
             res.status(201).json({
                 _id: newUser._id,
                 name: newUser.name,

@@ -1,7 +1,7 @@
 import { type Request, type Response } from "express";
 import { logActivity } from "../utils/activitylog.js";
 import AcademicYear from "../models/academic.model.js";
-import redisClient from "../config/redis.js";
+import redisClient, { clearCache } from "../config/redis.js";
 
 // @desc    Create a new Academic Year
 // @route   POST /api/academic-years
@@ -37,8 +37,8 @@ export const createAcademicYear = async (
       userId: (req as any).user._id,
       action: `Created academic year ${name}`,
     });
-    await redisClient.delPattern(`academicYears:*`);
-    await redisClient.del(`activityLogs`);
+    await clearCache("academicYears");
+    await clearCache("activityLogs");
     res.status(201).json(academicYear);
     return;
   } catch (error) {
