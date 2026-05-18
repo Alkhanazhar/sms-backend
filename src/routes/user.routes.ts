@@ -24,7 +24,7 @@ userRoutes.post("/login", login);
 userRoutes.post("/logout", logoutUser);
 userRoutes.get("/profile", protect, getUserProfile); // Get User Profile
 // teacher should be able to fetch all students
-userRoutes.get("/", protect, authorize(["admin", "teacher"]), getUsers);
+userRoutes.get("/", protect, authorize(["admin", "teacher","student"]), getUsers);
 // here you can use either put or patch
 userRoutes.put(
   "/update/:id",
