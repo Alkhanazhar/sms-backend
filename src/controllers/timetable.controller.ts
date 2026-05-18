@@ -10,16 +10,20 @@ import redisClient from "../config/redis.js";
 export const generateTimetable = async (req: Request, res: Response) => {
   try {
     const { classId, academicYearId, settings } = req.body;
-
+    console.log(classId, academicYearId, settings);
     await generateTimeTable(classId, academicYearId, settings);
+    await redisClient.delPattern(`timetable:*`);
     const userId = (req as any).user._id;
     await logActivity({
       userId,
       action: `Requested timetable generation for class ID: ${classId}`,
     });
+    await redisClient.del("timetable");
     return res.status(200).json({ message: "Timetable generated successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Server Error", error });
+  } catch (error: any) {
+    res.status(500).json({ message: "Server Error", error: error.message });
+    console.log(error.message);
+    console.log(error);
     return;
   }
 };

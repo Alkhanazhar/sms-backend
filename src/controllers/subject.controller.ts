@@ -25,7 +25,8 @@ export const createSubject = async (req: Request, res: Response) => {
         userId,
         action: `Created subject: ${newSubject.name}`,
       });
-      res.status(201).json(newSubject);
+      await redisClient.del("subjects");
+      return res.status(201).json(newSubject);
     }
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });

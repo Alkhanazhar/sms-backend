@@ -33,10 +33,12 @@ export const createNotice = async (req: Request, res: Response): Promise<void> =
       attachmentUrl,
       sender: (req as any).user?._id, // Assume auth middleware adds user to req
     });
-
+    await redisClient.delPattern(`notices:*`);
     res.status(201).json(notice);
+    return;
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });
+    return;
   }
 };
 

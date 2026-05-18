@@ -25,10 +25,10 @@ export const generateTimeTable = async (
   if (!classData) {
     throw new Error("Class not found");
   }
-
+  console.log(classData.subjects);
   // Fetch teachers
   const allTeacher = await User.find({ role: "teacher" });
-
+  console.log(allTeacher);
   // Filter qualified teachers for class subjects
   const classSubjectsIds = classData.subjects.map((sub) => sub._id.toString());
 
@@ -62,7 +62,8 @@ export const generateTimeTable = async (
   };
 
   // 2. Generate timetable logic via Gemini
-  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  const apiKey = process.env.GENERATIVE_AI_API_KEY;
+  console.log(apiKey);
   if (!apiKey) {
     throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is missing");
   }
@@ -105,16 +106,19 @@ export const generateTimeTable = async (
     apiKey,
   });
 
+  console.log(google);
+
   const activeModel = google("gemini-3-flash-preview");
 
   const { text } = await generateText({
     prompt,
     model: activeModel,
   });
+  console.log(text);
 
   const cleanJSON = text.replace(/```json/g, "").replace(/```/g, "").trim();
   const aiSchedule = JSON.parse(cleanJSON);
-
+  console.log(aiSchedule);
   // 3. Save timetable
   // Delete existing to avoid duplicates
   await timetableModel.findOneAndDelete({
@@ -127,7 +131,7 @@ export const generateTimeTable = async (
     academicYear: academicYearId,
     schedule: aiSchedule.schedule,
   });
-
+  console.log("Timetable generated successfully");
   return { success: true, message: "Timetable generated successfully" };
 };
 
@@ -149,7 +153,7 @@ export const generateExam = async ({
   difficulty,
   count,
 }: GenerateExamParams): Promise<{ success: boolean; count: number }> => {
-  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  const apiKey = process.env.GENERATIVE_AI_API_KEY;
   if (!apiKey) {
     throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is missing");
   }

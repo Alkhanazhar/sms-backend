@@ -37,9 +37,13 @@ export const createAcademicYear = async (
       userId: (req as any).user._id,
       action: `Created academic year ${name}`,
     });
+    await redisClient.delPattern(`academicYears:*`);
+    await redisClient.del(`activityLogs`);
     res.status(201).json(academicYear);
+    return;
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });
+    return;
   }
 };
 

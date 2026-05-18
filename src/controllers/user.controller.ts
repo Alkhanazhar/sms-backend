@@ -58,6 +58,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                     details: `Registered user with email: ${newUser.email}`,
                 });
             }
+            await redisClient.del("users");
             res.status(201).json({
                 _id: newUser._id,
                 name: newUser.name,
@@ -68,6 +69,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                 teacherSubject: newUser.teacherSubject,
                 message: "User registered successfully",
             });
+            return;
         } else {
             res.status(400).json({ message: "Invalid user data" });
         }

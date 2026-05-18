@@ -25,8 +25,7 @@ export const createIncident = async (req: Request, res: Response): Promise<void>
     }
 
     // Call Google Gemini to analyze the incident
-    const prompt = `
-You are an expert school behavior analyst and child psychologist.
+    const prompt = `You are an expert school behavior analyst and child psychologist.
 Analyze the following student behavior incident and return a strict JSON response.
 
 Incident Title: "${title}"

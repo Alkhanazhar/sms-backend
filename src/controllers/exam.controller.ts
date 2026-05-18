@@ -68,9 +68,12 @@ export const createExam = async (req: Request, res: Response) => {
     });
     const userId = (req as any).user._id;
     await logActivity({ userId, action: "User created a new exam" });
+    await redisClient.delPattern(`exams:*`);
     res.status(201).json(exam);
+    return;
   } catch (error: any) {
     res.status(500).json({ message: error.message });
+    return;
   }
 };
 
@@ -160,6 +163,7 @@ export const getExamById = async (req: Request, res: Response) => {
     await redisClient.setEx(cacheKey, 60 * 5, JSON.stringify(exam));
 
     res.json(exam);
+    return;
   } catch (error: any) {
     console.error(error);
 

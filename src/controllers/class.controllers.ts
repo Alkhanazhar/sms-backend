@@ -29,6 +29,7 @@ export const createClass = async (req: Request, res: Response) => {
       userId: (req as any).user.id,
       action: `Created new class: ${newClass.name}`,
     });
+    await redisClient.del("classes");
     res.status(201).json(newClass);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error });

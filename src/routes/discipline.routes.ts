@@ -8,7 +8,7 @@ import {
 import { protect, authorize } from "../middleware/protect.js";
 import { uploadDisciplineAttachment } from "../middleware/upload.middleware.js";
 
-const router = express.Router();
+const   router = express.Router();
 
 // Get incidents (accessible to all logged-in roles, controller handles filtering)
 router.get("/", protect, getIncidents);
