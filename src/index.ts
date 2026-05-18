@@ -1,3 +1,4 @@
+import http from "http";
 import cookieParser from "cookie-parser";
 import express, {
     NextFunction,
@@ -25,6 +26,8 @@ import examRouter from "./routes/exam.route.js";
 import dashboardRouter from "./routes/dashboard.routes.js";
 import noticeRouter from "./routes/notice.routes.js";
 import disciplineRouter from "./routes/discipline.routes.js";
+import transportRouter from "./modules/transport/routes/transport.routes.js";
+import { initTransportSocket } from "./modules/transport/sockets/transport.socket.js";
 
 import { inngest } from "./innegest/index.js";
 import { generateExam, generateTimeTable, handleExamSubmission } from "./innegest/functions.js";
@@ -130,6 +133,7 @@ app.use("/api/exams", examRouter);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/notices", noticeRouter);
 app.use("/api/discipline", disciplineRouter);
+app.use("/api/transport", transportRouter);
 app.use(
     "/api/inngest",
     serve({
@@ -144,12 +148,17 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     res.status(500).json({ status: "error", message: err.message });
 })
 
-app.listen(PORT, () => {
+// Create HTTP server and bind Socket.IO for real-time transport tracking
+const server = http.createServer(app);
+initTransportSocket(server);
+
+server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
 process.on('SIGINT', async () => {
     console.log('Shutting down gracefully...');
     await redisClient.quit();
     await mongoose.connection.close();
+    server.close();
     process.exit(0);
 });
