@@ -9,7 +9,7 @@ import type { AuthRequest } from "../../../middleware/protect.js";
 // @access  Private (Admin only)
 export const createBus = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { busNumber, busName, capacity, driver, route, status } = req.body;
+        const { busNumber, busName, capacity, driver, attendant, route, status, gpsDeviceId, rcExpiry, insuranceExpiry, pollutionExpiry, fitnessExpiry } = req.body;
 
         // Check if bus number already exists
         const existing = await Bus.findOne({ busNumber });
@@ -27,13 +27,28 @@ export const createBus = async (req: AuthRequest, res: Response): Promise<void> 
             }
         }
 
+        // If attendant is provided, validate they exist and have "attendant" role
+        if (attendant) {
+            const attendantUser = await User.findById(attendant);
+            if (!attendantUser || attendantUser.role !== "attendant") {
+                res.status(400).json({ message: "Invalid attendant. User must have 'attendant' role." });
+                return;
+            }
+        }
+
         const bus = await Bus.create({
             busNumber,
             busName,
             capacity,
             driver: driver || null,
+            attendant: attendant || null,
             route: route || null,
             status,
+            gpsDeviceId: gpsDeviceId || null,
+            rcExpiry: rcExpiry ? new Date(rcExpiry) : null,
+            insuranceExpiry: insuranceExpiry ? new Date(insuranceExpiry) : null,
+            pollutionExpiry: pollutionExpiry ? new Date(pollutionExpiry) : null,
+            fitnessExpiry: fitnessExpiry ? new Date(fitnessExpiry) : null,
         });
 
         if (req.user) {
@@ -69,6 +84,7 @@ export const getBuses = async (req: AuthRequest, res: Response): Promise<void> =
             Bus.countDocuments(filter),
             Bus.find(filter)
                 .populate("driver", "name email")
+                .populate("attendant", "name email")
                 .populate("route", "routeName estimatedTime")
                 .sort({ createdAt: -1 })
                 .skip(skip)
@@ -96,6 +112,7 @@ export const getBusById = async (req: AuthRequest, res: Response): Promise<void>
     try {
         const bus = await Bus.findById(req.params.id)
             .populate("driver", "name email")
+            .populate("attendant", "name email")
             .populate("route", "routeName estimatedTime stops");
 
         if (!bus) {
@@ -120,7 +137,7 @@ export const updateBus = async (req: AuthRequest, res: Response): Promise<void> 
             return;
         }
 
-        const { busNumber, busName, capacity, driver, route, status } = req.body;
+        const { busNumber, busName, capacity, driver, attendant, route, status, gpsDeviceId, rcExpiry, insuranceExpiry, pollutionExpiry, fitnessExpiry } = req.body;
 
         // If driver is being changed, validate
         if (driver && driver !== bus.driver?.toString()) {
@@ -131,12 +148,26 @@ export const updateBus = async (req: AuthRequest, res: Response): Promise<void> 
             }
         }
 
+        if (attendant && attendant !== (bus as any).attendant?.toString()) {
+            const attendantUser = await User.findById(attendant);
+            if (!attendantUser || attendantUser.role !== "attendant") {
+                res.status(400).json({ message: "Invalid attendant. User must have 'attendant' role." });
+                return;
+            }
+        }
+
         bus.busNumber = busNumber || bus.busNumber;
         bus.busName = busName || bus.busName;
         bus.capacity = capacity ?? bus.capacity;
         bus.driver = driver || bus.driver;
+        (bus as any).attendant = attendant || (bus as any).attendant;
         bus.route = route || bus.route;
         bus.status = status || bus.status;
+        (bus as any).gpsDeviceId = gpsDeviceId ?? (bus as any).gpsDeviceId;
+        (bus as any).rcExpiry = rcExpiry === undefined ? (bus as any).rcExpiry : (rcExpiry ? new Date(rcExpiry) : null);
+        (bus as any).insuranceExpiry = insuranceExpiry === undefined ? (bus as any).insuranceExpiry : (insuranceExpiry ? new Date(insuranceExpiry) : null);
+        (bus as any).pollutionExpiry = pollutionExpiry === undefined ? (bus as any).pollutionExpiry : (pollutionExpiry ? new Date(pollutionExpiry) : null);
+        (bus as any).fitnessExpiry = fitnessExpiry === undefined ? (bus as any).fitnessExpiry : (fitnessExpiry ? new Date(fitnessExpiry) : null);
 
         const updatedBus = await bus.save();
 

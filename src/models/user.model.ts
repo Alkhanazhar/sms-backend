@@ -7,9 +7,18 @@ export enum UserRole {
     STUDENT = "student",
     PARENT = "parent",
     DRIVER = "driver",
+    ATTENDANT = "attendant",
+    TRANSPORT_INCHARGE = "transport_incharge",
 }
 
-export type userRoles = "admin" | "teacher" | "student" | "parent" | "driver";
+export type userRoles =
+    | "admin"
+    | "teacher"
+    | "student"
+    | "parent"
+    | "driver"
+    | "attendant"
+    | "transport_incharge";
 
 export interface IUser extends Document {
     name: string;

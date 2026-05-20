@@ -29,6 +29,7 @@ import {
 // Tracking controllers
 import {
     updateBusLocation,
+    getLastBusLocation,
     getLiveStudentTracking,
     triggerSOS,
     resolveSOS,
@@ -36,6 +37,32 @@ import {
     logStudentAttendance,
     getBusAttendance,
 } from "../controllers/tracking.controller.js";
+
+import { createStop, getStops, updateStop } from "../controllers/stop.controller.js";
+import {
+    startTrip,
+    endTrip,
+    stopArrived,
+    stopDeparted,
+    setStudentRideStatus,
+    getTripSummary,
+} from "../controllers/trip.controller.js";
+
+import {
+    createFeePlan,
+    getFeePlans,
+    generateDemand,
+    recordPayment,
+    getDefaulters,
+} from "../controllers/fees.controller.js";
+
+import {
+    getRouteOccupancy,
+    getTripLogs,
+    getStopPunctuality,
+    getComplianceExpiries,
+    getActiveSOS,
+} from "../controllers/reports.controller.js";
 
 const transportRouter = express.Router();
 
@@ -69,9 +96,37 @@ transportRouter.delete("/assignments/:id", protect, authorize(["admin"]), remove
 // ──────────────────────────────────────────────
 // Driver pushes GPS (NO storage — pure Socket.IO broadcast)
 transportRouter.post("/location", protect, authorize(["driver"]), updateBusLocation);
+transportRouter.get("/location/:busId/last", protect, authorize(["admin", "driver", "parent", "student"]), getLastBusLocation);
 
 // Parent/Student/Admin fetches tracking info (bus details + route, NOT GPS)
 transportRouter.get("/live/:studentId", protect, authorize(["parent", "student", "admin"]), getLiveStudentTracking);
+
+// Stops master
+transportRouter.post("/stops", protect, authorize(["admin", "transport_incharge"]), createStop);
+transportRouter.get("/stops", protect, authorize(["admin", "transport_incharge", "driver"]), getStops);
+transportRouter.put("/stops/:id", protect, authorize(["admin", "transport_incharge"]), updateStop);
+
+// Trip operations (daily run)
+transportRouter.post("/trips/start", protect, authorize(["admin", "transport_incharge", "driver"]), startTrip);
+transportRouter.put("/trips/:id/end", protect, authorize(["admin", "transport_incharge", "driver"]), endTrip);
+transportRouter.post("/trips/stop-arrived", protect, authorize(["admin", "transport_incharge", "driver"]), stopArrived);
+transportRouter.post("/trips/stop-departed", protect, authorize(["admin", "transport_incharge", "driver"]), stopDeparted);
+transportRouter.post("/trips/student-status", protect, authorize(["admin", "transport_incharge", "driver"]), setStudentRideStatus);
+transportRouter.get("/trips/:id/summary", protect, authorize(["admin", "transport_incharge", "driver"]), getTripSummary);
+
+// Fees (manual ledger-style; no payment gateway integration)
+transportRouter.post("/fees/plans", protect, authorize(["admin", "transport_incharge"]), createFeePlan);
+transportRouter.get("/fees/plans", protect, authorize(["admin", "transport_incharge"]), getFeePlans);
+transportRouter.post("/fees/demands", protect, authorize(["admin", "transport_incharge"]), generateDemand);
+transportRouter.post("/fees/payments", protect, authorize(["admin", "transport_incharge"]), recordPayment);
+transportRouter.get("/fees/defaulters", protect, authorize(["admin", "transport_incharge"]), getDefaulters);
+
+// Reports
+transportRouter.get("/reports/occupancy", protect, authorize(["admin", "transport_incharge"]), getRouteOccupancy);
+transportRouter.get("/reports/trips", protect, authorize(["admin", "transport_incharge"]), getTripLogs);
+transportRouter.get("/reports/punctuality", protect, authorize(["admin", "transport_incharge"]), getStopPunctuality);
+transportRouter.get("/reports/compliance-expiries", protect, authorize(["admin", "transport_incharge"]), getComplianceExpiries);
+transportRouter.get("/reports/sos-active", protect, authorize(["admin", "transport_incharge"]), getActiveSOS);
 
 // ──────────────────────────────────────────────
 // SOS / Emergency Alerts

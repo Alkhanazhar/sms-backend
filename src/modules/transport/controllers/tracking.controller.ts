@@ -6,6 +6,7 @@ import TransportAttendance, { BoardingStatus } from "../models/attendance.model.
 import { getIO } from "../sockets/transport.socket.js";
 import { logActivity } from "../../../utils/activitylog.js";
 import type { AuthRequest } from "../../../middleware/protect.js";
+import redisClient from "../../../config/redis.js";
 
 // ============================================================
 // LIVE GPS TRACKING
@@ -16,6 +17,7 @@ import type { AuthRequest } from "../../../middleware/protect.js";
 
 const MAX_SPEED_KMH = 140; // fake GPS detection threshold
 const MAX_ACCURACY_METERS = 100; // GPS accuracy threshold
+const LAST_LOCATION_TTL_SECONDS = 60 * 60; // 1 hour
 
 // @desc    Update bus location (real-time only, no storage)
 // @route   POST /api/transport/location
@@ -81,10 +83,58 @@ export const updateBusLocation = async (req: AuthRequest, res: Response): Promis
             timestamp: new Date(),
         };
 
+        // Cache last-known location for late-joining clients (short TTL)
+        // NOTE: This is not a full history; it is only the most recent point.
+        try {
+            await redisClient.set(
+                `transport:bus:${busId}:lastLocation`,
+                JSON.stringify(locationPayload),
+                { EX: LAST_LOCATION_TTL_SECONDS }
+            );
+        } catch (e) {
+            // Best-effort cache; do not fail the request if Redis is unavailable.
+            console.warn("[Transport] Failed to cache lastLocation in Redis:", (e as Error)?.message || e);
+        }
+
         // Emit to all clients watching this specific bus
         io.to(`bus:${busId}`).emit("bus-location-updated", locationPayload);
+        // ProSchool360-style event alias (new clients should prefer this)
+        io.to(`bus:${busId}`).emit("vehicle.location", locationPayload);
 
         res.json({ success: true, message: "Location broadcast sent" });
+    } catch (error: any) {
+        res.status(500).json({ message: "Server Error", error: error.message });
+    }
+};
+
+// @desc    Get last-known cached location for a bus (Redis)
+// @route   GET /api/transport/location/:busId/last
+// @access  Private (Admin, Driver, Parent, Student)
+export const getLastBusLocation = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { busId } = req.params;
+
+        const bus = await Bus.findById(busId);
+        if (!bus) {
+            res.status(404).json({ message: "Bus not found" });
+            return;
+        }
+
+        // Driver can only read their assigned bus
+        if (req.user?.role === "driver") {
+            if (!bus.driver || bus.driver.toString() !== req.user._id.toString()) {
+                res.status(403).json({ message: "Unauthorized" });
+                return;
+            }
+        }
+
+        const raw = await redisClient.get(`transport:bus:${busId}:lastLocation`);
+        if (!raw) {
+            res.status(404).json({ message: "No live location available" });
+            return;
+        }
+
+        res.json({ busId, lastLocation: JSON.parse(raw) });
     } catch (error: any) {
         res.status(500).json({ message: "Server Error", error: error.message });
     }
@@ -120,7 +170,11 @@ export const getLiveStudentTracking = async (req: AuthRequest, res: Response): P
             // NOTE: Live GPS coordinates are NOT returned here.
             // Clients must connect via Socket.IO and join the bus room
             // to receive real-time location updates.
-            instructions: "Connect to Socket.IO and emit 'join-bus-room' with the busId to receive live GPS updates.",
+            instructions: {
+                liveLocation: "Connect to Socket.IO and emit 'join-bus-room' with the busId to receive live GPS updates.",
+                attendance: "Connect to Socket.IO and emit 'join-student-room' with the studentId to receive boarding/drop notifications.",
+                lastKnownLocation: "Optionally call GET /api/transport/location/:busId/last for last-known cached location (Redis, short TTL).",
+            },
         });
     } catch (error: any) {
         res.status(500).json({ message: "Server Error", error: error.message });
@@ -281,7 +335,9 @@ export const logStudentAttendance = async (req: AuthRequest, res: Response): Pro
                 : `${studentName} has been dropped safely from bus ${bus.busName}`,
         };
 
-        // Notify the student's user room (parent will join this)
+        // Notify the student's room (parent app should join `student:{studentId}`)
+        io.to(`student:${studentId}`).emit("student-attendance-update", notificationPayload);
+        // Backward-compatible alias (older clients may have joined `user:{studentId}`)
         io.to(`user:${studentId}`).emit("student-attendance-update", notificationPayload);
 
         // Also notify admin

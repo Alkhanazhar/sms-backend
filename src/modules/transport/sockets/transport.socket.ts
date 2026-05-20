@@ -30,7 +30,18 @@ export const initTransportSocket = (server: HttpServer): Server => {
             console.log(`[Transport Socket] ${socket.id} left bus:${busId}`);
         });
 
-        // Parents join their own room for direct notifications (boarding/drop alerts)
+        // Parents join a student room to receive boarding/drop alerts for that student
+        socket.on("join-student-room", (studentId: string) => {
+            socket.join(`student:${studentId}`);
+            console.log(`[Transport Socket] ${socket.id} joined student:${studentId}`);
+        });
+
+        socket.on("leave-student-room", (studentId: string) => {
+            socket.leave(`student:${studentId}`);
+            console.log(`[Transport Socket] ${socket.id} left student:${studentId}`);
+        });
+
+        // Direct user room for generic notifications (optional usage)
         socket.on("join-user-room", (userId: string) => {
             socket.join(`user:${userId}`);
             console.log(`[Transport Socket] ${socket.id} joined user:${userId}`);
